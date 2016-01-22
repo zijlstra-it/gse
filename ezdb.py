@@ -54,6 +54,7 @@
 
 import sqlite3
 import os
+import re
 
 class TableDef:
   def __init__(self,name):
@@ -64,9 +65,15 @@ class TableDef:
     self.FIELDS.append({ "name" : name, "type" : type })
 
   def Create(self):
-    createlist = [a["name"] for a in self.FIELDS]
+    createlist = [a["name"] + " " + a["type"] for a in self.FIELDS]
     if len(createlist) > 1:
       return str("CREATE TABLE " + self.NAME + "(" + ",".join(createlist) + ");")
+    else:
+      return False
+
+  def Alter(self, columnname, columntype):
+    if columnname and columntype:
+      return str("ALTER TABLE " + self.NAME + " ADD COLUMN " + columnname + " " + columntype + ";")
     else:
       return False
 
@@ -113,7 +120,33 @@ class DatabaseDef:
           result = db.cursor().execute(table["obj"].Create())
         db.commit()
         db.close()
+      else:
+        for table in self.TABLES:
+          db = self.GetDB()
+          result = db.cursor().execute("SELECT name, sql FROM sqlite_master WHERE type='table' AND name='" + table["name"] + "';")
+          tableinfo = [a for a in result if a[0] == table["name"]]
+          if len(tableinfo) == 0:
+            db.cursor().execute(table["obj"].Create())
+          else:
+            if not tableinfo[0][1] + ";"  == table["obj"].Create():
+              oldcolumns = re.sub("^.*\(","", re.sub("\)$","",tableinfo[0][1])).split(",")
+              newcolumns = re.sub("^.*\(","", re.sub("\);$","",table["obj"].Create())).split(",")
+              if len(newcolumns) > len(oldcolumns):
+                newcolumns = [a for a in newcolumns if a not in set(oldcolumns)]
+                for thiscolumn in newcolumns:
+                  self.Alter(table["name"], thiscolumn.split(" ")[0], thiscolumn.split(" ")[1])
+              else:
+                raise NameError("Cannot remove columns or change column type")
       return True
+    except:
+      return False
+
+  def Alter(self, tablename, columnname, columntype):
+    try:
+      db = self.GetDB()
+      db.cursor().execute([a for a in self.TABLES if a["name"] == tablename][0]["obj"].Alter(columnname, columntype))
+      db.commit()
+      db.close()
     except:
       return False
 
