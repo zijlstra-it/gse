@@ -19,21 +19,23 @@ if not redirdb.Initialize():
 
 app = Flask(__name__)
 
-@app.route("/")
-def PerformDomainRedirect():
+@app.route("/", defaults ={'path':''})
+@app.route("/<path:path>")
+def PerformRedirect(path):
   hostname = request.headers.get("Host")
-  
-  if redirlist = redirdb.Select("redir",["hostname"],[hostname]):
-    if thisredir = [a for a in redirlist where a["path"] == "/"]:
-      return redirect(thisredir["url"])
+
+  fulluri = "/" + path
+  redirlist = redirdb.Select("redir",["hostname"],[hostname])
+  if redirlist:
+    thisredir = [a for a in redirlist if a["path"] == fulluri ]
+    if thisredir:
+      return redirect(thisredir[0]["url"])
     else:
-      return render_template("error.html",message="Redirect for " + hostname + "/ not found")  
+      return render_template("error.html",message="Redirect for " + hostname + fulluri + " not found")  
   else:
     return render_template("error.html",message="Hostname not defined")
+ 
 
-@app.route("/<thisuri>")
-def PerformRedirect(thisuri):
-  hostname = request.headers.get("Host")
 
   return render_template("root-with-uri.html", hostname=hostname, uri=thisuri)
 
