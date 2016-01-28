@@ -11,7 +11,11 @@ def GenerateAuthToken(db):
     hash = md5.new()
     hash.update(str(random.random()))
     authtoken = hash.hexdigest()
+    
     if db.Insert("settings",["authtoken",authtoken]):
+      conf_file = open("./gse.conf","w")
+      conf_file.write("authtoken %s" % authtoken)
+      conf_file.close()
       return True
     else:
       return False
