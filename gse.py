@@ -13,9 +13,9 @@ def GenerateAuthToken(db):
     authtoken = hash.hexdigest()
     
     if db.Insert("settings",["authtoken",authtoken]):
-      conf_file = open("./gse.conf","w")
-      conf_file.write("authtoken %s" % authtoken)
-      conf_file.close()
+      f = open("./gse.conf","w")
+      f.write("authtoken %s" % authtoken)
+      f.close()
       return True
     else:
       return False
@@ -75,8 +75,5 @@ def PerformRedirect(path):
     else:
       return render_template("error.html",message="Hostname (" + hostname + ") not defined")
  
-
-
-  return render_template("root-with-uri.html", hostname=hostname, uri=thisuri)
 
 app.run(host="0.0.0.0",port=8080)
