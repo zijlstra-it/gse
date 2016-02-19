@@ -7,7 +7,7 @@ Running the server:
 
 ### Step 2  
 Configuring Domains  
->Set your DNS to point to the IP of the GSE server.  If you wish to use port 80 you will have to either figure out a way for GSE to run on port 80 or use a port translation mechanism of some sort.  
+>Set your DNS to point to the IP of the GSE server.  If you wish to use port 80 you will have to either figure out a way for GSE to run on port 80 (to avoid OS-level port restrictions) or use a port translation mechanism of some sort.  
 
 ### Step 3  
 Add Redirects  
